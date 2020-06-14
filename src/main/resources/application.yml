@@ -1,0 +1,18 @@
+cloud:
+  aws:
+    region:
+      static: eu-west-1
+      auto: false
+    stack:
+      auto: false
+
+aws:
+  sns:
+    local:
+      endpoint: http://localhost:4575
+      region: us-east-1
+  sqs:
+    local:
+      endpoint: http://localhost:4576
+      region: us-east-1
+  default-mode: local
