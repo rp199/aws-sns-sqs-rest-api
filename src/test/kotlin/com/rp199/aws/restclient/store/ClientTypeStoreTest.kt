@@ -1,12 +1,13 @@
 package com.rp199.aws.restclient.store
 
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.nulls.beNull
+import io.kotest.matchers.should
+import io.kotest.matchers.shouldBe
 
-internal class ClientTypeStoreTest {
+internal class ClientTypeStoreTest : StringSpec({
 
-    @Test
-    fun `getClientType should relate to each thread`() {
+    "getClientType should relate to each thread"{
         ClientTypeStore.setClientType(ClientType.AWS)
 
         val thread1 = Thread {
@@ -15,16 +16,14 @@ internal class ClientTypeStoreTest {
 
         thread1.start()
         thread1.join()
-        Assertions.assertEquals(ClientType.AWS, ClientTypeStore.getClientType())
+        ClientTypeStore.getClientType() shouldBe ClientType.AWS
     }
 
-    @Test
-    fun `clear should remove clientType from the store`() {
+    "clear should remove clientType from the store" {
         ClientTypeStore.setClientType(ClientType.LOCAL)
-        Assertions.assertEquals(ClientType.LOCAL, ClientTypeStore.getClientType())
+        ClientTypeStore.getClientType() shouldBe ClientType.LOCAL
 
         ClientTypeStore.clear()
-        Assertions.assertEquals(null, ClientTypeStore.getClientType())
-
+        ClientTypeStore.getClientType() should beNull()
     }
-}
+})

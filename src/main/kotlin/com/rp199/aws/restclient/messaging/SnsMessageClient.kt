@@ -8,7 +8,7 @@ import org.springframework.web.context.annotation.RequestScope
 @Component
 @RequestScope
 class SnsMessageClient(private val amazonSNS: AmazonSNS) {
-    private val notificationTemplate = NotificationMessagingTemplate(amazonSNS)
+    protected val notificationTemplate = NotificationMessagingTemplate(amazonSNS)
 
     fun sendMessage(topicName: String, message: String, messageAttributeMap: Map<String, String>? = emptyMap()) {
         notificationTemplate.convertAndSend(topicName, message, messageAttributeMap)

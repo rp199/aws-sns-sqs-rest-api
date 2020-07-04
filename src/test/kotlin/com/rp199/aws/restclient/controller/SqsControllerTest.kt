@@ -4,25 +4,25 @@ import com.beust.klaxon.Klaxon
 import com.rp199.aws.restclient.domain.PublishMessageRequest
 import com.rp199.aws.restclient.messaging.SqsMessageClient
 import com.rp199.aws.restclient.store.ClientType
+import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.core.test.TestCase
+import io.kotest.matchers.shouldBe
+import io.kotest.spring.SpringListener
 import io.mockk.*
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 
-@ExtendWith(SpringExtension::class)
 @WebMvcTest(SqsController::class)
-internal class SqsControllerTest {
+internal class SqsControllerTest : BehaviorSpec() {
+
+    override fun listeners() = listOf(SpringListener)
 
     @TestConfiguration
     class SqsControllerTestConfiguration {
@@ -39,210 +39,168 @@ internal class SqsControllerTest {
     @Autowired
     private lateinit var sqsMessageClient: SqsMessageClient
 
-    @BeforeEach
-    fun clearMockState() {
-        clearAllMocks()
+    private val queueName = "my-queue"
+
+    override fun beforeTest(testCase: TestCase) {
+        super.beforeTest(testCase)
+        if (testCase.isTopLevel()) {
+            clearAllMocks()
+        }
     }
 
-    @Test
-    fun `Spring context loaded`() {
-    }
+    init {
+        Given("Spring context loads") {}
 
-    @Test
-    fun `GET list endpoint should return a list of queues when there are queues`() {
-        //Given
-        val expectedTopicListResponse = listOf("my-queue1", "my-queue2", "my-queue3")
-        every { sqsMessageClient.listQueues() } returns expectedTopicListResponse
+        Given("That there are queues") {
+            val expectedTopicListResponse = listOf("my-queue1", "my-queue2", "my-queue3")
+            every { sqsMessageClient.listQueues() } returns expectedTopicListResponse
 
-        //When
-        val response = mockMvc.perform(MockMvcRequestBuilders.get("/sqs/list"))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-
-        //Then
-        Assertions.assertEquals(Klaxon().toJsonString(expectedTopicListResponse).replace(" ", ""), response.response.contentAsString)
-        verify { sqsMessageClient.listQueues() }
-    }
-
-    @Test
-    fun `GET list endpoint should return an empty list of queue when there are no queues`() {
-        //Given
-        every { sqsMessageClient.listQueues() } returns emptyList()
-
-        //When
-        val result = mockMvc.perform(MockMvcRequestBuilders.get("/sqs/list"))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-
-        //Then
-        Assertions.assertEquals(Klaxon().toJsonString(emptyList<String>()), result.response.contentAsString)
-        verify { sqsMessageClient.listQueues() }
-    }
-
-    @Test
-    fun `POST queueName endpoint should publish message with message attributes into the given queue`() {
-        //Given
-        val queueName = "my-queue"
-        val publishMessageRequest = PublishMessageRequest("Hello there!",
-                mapOf("someMessageAttribute" to "666", "anotherMessageAttribute" to "someValue"))
-
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(Klaxon().toJsonString(publishMessageRequest)))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-        //Then
-        verify { sqsMessageClient.sendMessage(queueName, publishMessageRequest.payload, publishMessageRequest.messageAttributes) }
-    }
-
-    @Test
-    fun `POST queueName endpoint should publish message without message attributes into the given queue`() {
-        //Given
-        val queueName = "my-queue"
-        val publishMessageRequest = PublishMessageRequest("Hello there!", null)
-
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(Klaxon().toJsonString(publishMessageRequest)))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-        //Then
-        verify { sqsMessageClient.sendMessage(queueName, publishMessageRequest.payload, publishMessageRequest.messageAttributes) }
-    }
-
-
-    @Test
-    fun `POST queueName endpoint should fail when the request body is missing`() {
-        //Given
-        val queueName = "my-queue"
-
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName"))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-        //Then
-        verify { sqsMessageClient wasNot called }
-    }
-
-    @Test
-    fun `POST queueName endpoint should fail when the request body is not JSON`() {
-        //Given
-        val queueName = "my-queue"
-
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName").content("I'm not JSON'"))
-                .andExpect(MockMvcResultMatchers.status().isUnsupportedMediaType)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-        //Then
-        verify { sqsMessageClient wasNot called }
-    }
-
-    @Test
-    fun `POST queueName endpoint should fail when the request body is invalid`() {
-        //Given
-        val queueName = "my-queue"
-
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-            {
-            "message": "This message has a unexpected format"
+            When("I Make GET request to /sqs/list endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.get("/sqs/list"))
+                Then("I get a 200 - OK response and the SQS client publishes the message") {
+                    val response = request.andExpect(MockMvcResultMatchers.status().isOk).andReturn().response
+                    response.contentAsString shouldBe Klaxon().toJsonString(expectedTopicListResponse).replace(" ", "")
+                    verify { sqsMessageClient.listQueues() }
+                }
             }
-        """.trimIndent()))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-        //Then
-        verify { sqsMessageClient wasNot called }
-    }
+        }
 
-    @Test
-    fun `POST queueName raw endpoint should publish raw message into the given queue`() {
-        //Given
-        val queueName = "my-queue"
-        val message = "Hello there!"
+        Given("That there are no queues") {
+            every { sqsMessageClient.listQueues() } returns emptyList()
+            When("I Make GET request to /sqs/list endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.get("/sqs/list"))
+                Then("I get a 200 - OK response and the SQS client publishes the message") {
+                    val response = request.andExpect(MockMvcResultMatchers.status().isOk).andReturn().response
+                    response.contentAsString shouldBe Klaxon().toJsonString(emptyList<String>())
+                    verify { sqsMessageClient.listQueues() }
+                }
+            }
+        }
 
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName/raw")
-                .content(message))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-        //Then
-        verify { sqsMessageClient.sendMessage(queueName, message) }
-    }
+        Given("A message with message attributes") {
+            val publishMessageRequest = PublishMessageRequest("Hello there!",
+                    mapOf("someMessageAttribute" to "666", "anotherMessageAttribute" to "someValue"))
+            When("I Make POST request to /sqs/${queueName} endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Klaxon().toJsonString(publishMessageRequest)))
+                Then("I get a 200 - OK response and the SQS client publishes the message") {
+                    request.andExpect(MockMvcResultMatchers.status().isOk)
+                    verify { sqsMessageClient.sendMessage(queueName, publishMessageRequest.payload, publishMessageRequest.messageAttributes) }
+                }
+            }
+        }
 
+        Given("A message without message attributes") {
+            val publishMessageRequest = PublishMessageRequest("Hello there!", null)
+            When("I Make POST request to /sqs/${queueName} endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Klaxon().toJsonString(publishMessageRequest)))
+                Then("I get a 200 - OK response and the SQS client publishes the message") {
+                    request.andExpect(MockMvcResultMatchers.status().isOk)
+                    verify { sqsMessageClient.sendMessage(queueName, publishMessageRequest.payload, publishMessageRequest.messageAttributes) }
+                }
+            }
+        }
 
-    @Test
-    fun `POST queueName raw endpoint should fail when the request body is missing`() {
-        //Given
-        val queueName = "my-queue"
+        Given("An empty request body ") {
+            When("I Make POST request to /sqs/${queueName} endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/${queueName}"))
+                        .andDo(MockMvcResultHandlers.print())
+                Then("I get a 400 - bad request response (400) and the SQS client is not called") {
+                    request.andExpect(MockMvcResultMatchers.status().isBadRequest)
+                    verify { sqsMessageClient wasNot called }
+                }
+            }
+        }
 
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName/raw"))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-        //Then
-        verify { sqsMessageClient wasNot called }
-    }
+        Given("A non JSON message") {
+            val message = "I'm not JSON"
+            When("I Make POST request to /sqs/${queueName} endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/${queueName}")
+                        .content(message))
+                Then("I get a 415 - unsupported media type response and the SQS client is not called") {
+                    request.andExpect(MockMvcResultMatchers.status().isUnsupportedMediaType)
+                    verify { sqsMessageClient wasNot called }
+                }
+            }
+        }
 
-    @Test
-    fun `GET queueName endpoint should return the message when the queue has messages`() {
-        //Given
-        val queueName = "my-queue"
-        val message = "Hello there!"
+        Given("A JSON message with a unexpected format") {
+            val message = """
+            {
+                "message": "This message has a unexpected format"
+            }
+            """.trimIndent()
 
-        every { sqsMessageClient.receiveMessage(queueName) } returns message
+            When("I Make POST request to /sqs/${queueName} endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/${queueName}")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(message))
+                Then("I get a 400 - bad request response and the SQS client is not called") {
+                    request.andExpect(MockMvcResultMatchers.status().isBadRequest)
+                    verify { sqsMessageClient wasNot called }
+                }
+            }
+        }
 
-        //When
-        val result = mockMvc.perform(MockMvcRequestBuilders.get("/sqs/$queueName"))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
+        Given("A simple message") {
+            val message = "Hello there!"
+            When("I Make POST request to /sqs/$queueName/raw endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName/raw")
+                        .content(message))
+                Then("I get a 200 - OK response and the SQS client publishes the message") {
+                    request.andExpect(MockMvcResultMatchers.status().isOk)
+                    verify { sqsMessageClient.sendMessage(queueName, message) }
+                }
+            }
+        }
 
-        //Then
-        Assertions.assertEquals(message, result.response.contentAsString)
-        verify { sqsMessageClient.receiveMessage(queueName) }
-    }
+        Given("An empty request body") {
+            When("I Make POST request to /sqs/$queueName/raw endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName/raw"))
+                        .andDo(MockMvcResultHandlers.print())
+                Then("I get a 400 - bad request response (400) and the SQS client is not called") {
+                    request.andExpect(MockMvcResultMatchers.status().isBadRequest)
+                    verify { sqsMessageClient wasNot called }
+                }
+            }
+        }
 
-    @Test
-    fun `GET queueName endpoint should return 404 not found when the queue is empty`() {
-        //Given
-        val queueName = "my-queue"
-        every { sqsMessageClient.receiveMessage(queueName) } returns null
+        Given("Queue has a message") {
+            val message = "Hello there!"
+            every { sqsMessageClient.receiveMessage(queueName) } returns message
+            When("I Make GET request to /sqs/$queueName endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.get("/sqs/$queueName"))
+                Then("I get the message") {
+                    val response = request.andExpect(MockMvcResultMatchers.status().isOk).andReturn()
+                    response.response.contentAsString shouldBe message
+                    verify { sqsMessageClient.receiveMessage(queueName) }
+                }
+            }
+        }
 
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.get("/sqs/$queueName"))
-                .andExpect(MockMvcResultMatchers.status().isNotFound)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
+        Given("Queue is empty") {
+            every { sqsMessageClient.receiveMessage(queueName) } returns null
+            When("I Make GET request to /sqs/$queueName endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.get("/sqs/$queueName"))
+                Then("I get a 404 - Not Found response (400)") {
+                    request.andExpect(MockMvcResultMatchers.status().isNotFound)
+                    verify { sqsMessageClient.receiveMessage(queueName) }
+                }
+            }
+        }
 
-        //Then
-        verify { sqsMessageClient.receiveMessage(queueName) }
-    }
+        Given("Queue with messages") {
+            When("I Make DELETE request to /sqs/$queueName endpoint") {
+                val request = mockMvc.perform(MockMvcRequestBuilders.delete("/sqs/$queueName"))
+                Then("I get a 200 and the queue is purged") {
+                    request.andExpect(MockMvcResultMatchers.status().isOk)
+                    verify { sqsMessageClient.purgeQueue(queueName) }
+                }
+            }
+        }
 
-    @Test
-    fun `DELETE queueName endpoint should purge the given queue`() {
-        //Given
-        val queueName = "my-queue"
-
-        //When
-        mockMvc.perform(MockMvcRequestBuilders.delete("/sqs/$queueName"))
-                .andExpect(MockMvcResultMatchers.status().isOk)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
-
-        //Then
-        verify { sqsMessageClient.purgeQueue(queueName) }
     }
 }

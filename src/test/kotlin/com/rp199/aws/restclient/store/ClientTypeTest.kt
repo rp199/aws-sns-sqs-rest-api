@@ -1,22 +1,22 @@
 package com.rp199.aws.restclient.store
 
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
-import org.junit.jupiter.params.provider.NullAndEmptySource
+import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
 
-internal class ClientTypeTest {
+internal class ClientTypeTest : StringSpec({
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    fun `fromString should return default value for null and empty values`(nullOrEmpty: String?) {
-        Assertions.assertEquals(ClientType.AWS, ClientType.fromString(nullOrEmpty))
+    "fromString should return default value for null and empty values"{
+        listOf("",
+                null
+        ).map { ClientType.fromString(it) shouldBe ClientType.AWS }
     }
 
-    @ParameterizedTest
-    @CsvSource("local,LOCAL", "aws,AWS", "LOCAL,LOCAL", "AWS,AWS")
-    fun `fromString should map correctly from the matching string ignoring case`(clientTypeString: String,
-                                                                                 expectedClientType: ClientType) {
-        Assertions.assertEquals(expectedClientType, ClientType.fromString(clientTypeString))
+    "fromString should map correctly from the matching string ignoring case"{
+        listOf(
+                "local" to ClientType.LOCAL,
+                "LOCAL" to ClientType.LOCAL,
+                "aws" to ClientType.AWS,
+                "AWS" to ClientType.AWS
+        ).map { (input, expected) -> ClientType.fromString(input) shouldBe expected }
     }
-}
+})

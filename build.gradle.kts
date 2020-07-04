@@ -25,8 +25,8 @@ repositories {
 //Dependencies Versions
 val springCouldVersion = "2.2.2.RELEASE"
 val springMockkVersion = "2.0.1"
-val junitParamsVersion = "5.6.2"
 val klaxonVersion = "5.0.12"
+val kotestVersion = "4.1.0.RC2"
 
 
 dependencies {
@@ -44,10 +44,14 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("com.ninja-squad:springmockk:$springMockkVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:$junitParamsVersion")
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
+    testImplementation("io.kotest:kotest-runner-console-jvm:$kotestVersion")
+    testImplementation("io.kotest:kotest-extensions-spring:$kotestVersion")
+
 }
 
 tasks.withType<Test> {
