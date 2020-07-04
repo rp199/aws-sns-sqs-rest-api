@@ -156,10 +156,9 @@ internal class SnsControllerTest : BehaviorSpec() {
             }
         }
 
-        Given("An empty request body") {
+        Given("An empty request") {
             When("I Make POST request to /sns/{$topicName}/raw endpoint") {
                 val request = mockMvc.perform(post("/sns/$topicName/raw"))
-                        .andDo(print())
                 Then("I get a 400 - bad request response (400) and the SNS client is not called") {
                     request.andExpect(status().isBadRequest)
                     verify { snsMessageClient wasNot called }

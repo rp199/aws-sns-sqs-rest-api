@@ -104,7 +104,7 @@ internal class SqsControllerTest : BehaviorSpec() {
             }
         }
 
-        Given("An empty request body ") {
+        Given("An empty request body") {
             When("I Make POST request to /sqs/${queueName} endpoint") {
                 val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/${queueName}"))
                         .andDo(MockMvcResultHandlers.print())
@@ -157,7 +157,7 @@ internal class SqsControllerTest : BehaviorSpec() {
             }
         }
 
-        Given("An empty request body") {
+        Given("An empty request") {
             When("I Make POST request to /sqs/$queueName/raw endpoint") {
                 val request = mockMvc.perform(MockMvcRequestBuilders.post("/sqs/$queueName/raw"))
                         .andDo(MockMvcResultHandlers.print())
