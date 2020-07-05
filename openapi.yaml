@@ -1,0 +1,190 @@
+openapi: 3.0.1
+info:
+  title: SNS/SQS Rest API
+  description: A spring boot REST API for interacting with AWS SNS and SQS written
+    in Kotlin
+  license:
+    name: Apache 2.0
+    url: "https://www.apache.org/licenses/LICENSE-2.0"
+  version: v1
+servers:
+- url: "http://localhost:8080"
+  description: Generated server url
+tags:
+- name: sqs
+  description: SQS Rest API
+- name: sns
+  description: SNS Rest API
+paths:
+  /sns/{queueName}/raw:
+    post:
+      tags:
+      - sns
+      summary: Publishes a raw message to the given topic
+      operationId: publishRawMessage
+      parameters:
+      - name: queueName
+        in: path
+        description: name of the topic where the message will be published
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: Message successfully published
+  /sns/{topicName}:
+    post:
+      tags:
+      - sns
+      summary: Publishes a message to the given topic. Message attributes are optional
+      operationId: publishMessage
+      parameters:
+      - name: topicName
+        in: path
+        description: name of the topic where the message will be published
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishMessageRequest"
+        required: true
+      responses:
+        "200":
+          description: Message successfully published
+  /sns/list:
+    get:
+      tags:
+      - sns
+      summary: Lists all the available topics names
+      operationId: listTopics
+      responses:
+        "200":
+          description: Topic names returned
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+  /sqs/{queueName}/raw:
+    post:
+      tags:
+      - sqs
+      summary: Publishes a raw message to the given queue
+      operationId: publishRawMessage_1
+      parameters:
+      - name: queueName
+        in: path
+        description: name of the queue where the message will be published
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: Message successfully published
+  /sqs/{queueName}:
+    get:
+      tags:
+      - sqs
+      summary: Polls the latest message from the given queue
+      operationId: receiveMessage
+      parameters:
+      - name: queueName
+        in: path
+        description: name of the queue to be polled
+        required: true
+        schema:
+          type: string
+      responses:
+        "404":
+          description: No message found in the queue
+          content:
+            '*/*':
+              schema:
+                type: string
+        "200":
+          description: Message successfully returned
+          content:
+            '*/*':
+              schema:
+                type: string
+    post:
+      tags:
+      - sqs
+      summary: Publishes a message to the given queue. Message attributes are optional
+      operationId: publishMessage_1
+      parameters:
+      - name: queueName
+        in: path
+        description: name of the queue where the message will be published
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PublishMessageRequest"
+        required: true
+      responses:
+        "200":
+          description: Message successfully published
+    delete:
+      tags:
+      - sqs
+      summary: Purge the given queue
+      operationId: purgeQueue
+      parameters:
+      - name: queueName
+        in: path
+        description: name of the queue to be purged
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Queue was purged
+  /sqs/list:
+    get:
+      tags:
+      - sqs
+      summary: Lists all the available queues names
+      operationId: listQueues
+      responses:
+        "200":
+          description: Queue names returned
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
+components:
+  schemas:
+    PublishMessageRequest:
+      required:
+      - payload
+      type: object
+      properties:
+        payload:
+          type: string
+        messageAttributes:
+          type: object
+          additionalProperties:
+            type: string
+      description: message request containing the payload and message attributes

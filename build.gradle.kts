@@ -5,6 +5,8 @@ plugins {
     id("io.spring.dependency-management") version "1.0.9.RELEASE"
     kotlin("jvm") version "1.3.72"
     kotlin("plugin.spring") version "1.3.72"
+    id("com.github.johnrengelman.processes") version "0.5.0"
+    id("org.springdoc.openapi-gradle-plugin") version "1.3.0"
 }
 
 group = "com.rp199"
@@ -27,6 +29,7 @@ val springCouldVersion = "2.2.2.RELEASE"
 val springMockkVersion = "2.0.1"
 val klaxonVersion = "5.0.12"
 val kotestVersion = "4.1.0.RC2"
+val springOpenApiVersion = "1.4.3"
 
 
 dependencies {
@@ -38,6 +41,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.beust:klaxon:$klaxonVersion")
+    implementation("org.springdoc:springdoc-openapi-ui:$springOpenApiVersion")
+    implementation("org.springdoc:springdoc-openapi-kotlin:$springOpenApiVersion")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
@@ -63,4 +68,11 @@ tasks.withType<KotlinCompile> {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "1.8"
     }
+}
+
+openApi {
+    apiDocsUrl.set("http://localhost:8080/v3/api-docs.yaml")
+    outputDir.set(file(rootDir))
+    outputFileName.set("openapi.yaml")
+    waitTimeInSeconds.set(10)
 }
