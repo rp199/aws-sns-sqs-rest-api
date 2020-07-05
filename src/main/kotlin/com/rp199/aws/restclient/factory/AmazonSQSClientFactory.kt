@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 class AmazonSQSClientFactory(
         @Value("\${aws.sqs.local.endpoint}") private val endpoint: String,
         @Value("\${aws.sqs.local.region}") private val localRegion: String,
-        private val awsDummyCredentialsProvider: AWSCredentialsProvider) : AmazonClientFactory<AmazonSQSAsync> {
+        private val awsDummyCredentialsProvider: AWSCredentialsProvider) : AmazonClientFactory<AmazonSQSAsync>() {
 
     override fun createDefaultClient(): AmazonSQSAsync {
         return AmazonSQSAsyncClientBuilder.defaultClient()

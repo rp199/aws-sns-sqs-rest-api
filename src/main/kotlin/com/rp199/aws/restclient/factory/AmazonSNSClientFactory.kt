@@ -12,7 +12,7 @@ class AmazonSNSClientFactory(
         @Value("\${aws.sns.local.endpoint}") private val localEndpoint: String,
         @Value("\${aws.sns.local.region}") private val localRegion: String,
         private val awsDummyCredentialsProvider: AWSCredentialsProvider
-) : AmazonClientFactory<AmazonSNS> {
+) : AmazonClientFactory<AmazonSNS>() {
 
     override fun createDefaultClient(): AmazonSNS {
         return AmazonSNSClientBuilder.defaultClient()

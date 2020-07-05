@@ -2,16 +2,18 @@ package com.rp199.aws.restclient.factory
 
 import com.rp199.aws.restclient.store.ClientType
 
-interface AmazonClientFactory<T> {
+abstract class AmazonClientFactory<T> {
+    val localClient: T by lazy { createLocalClient() }
+    val defaultClient: T by lazy { createDefaultClient() }
 
     fun createClient(clientType: ClientType): T {
         return when (clientType) {
-            ClientType.LOCAL -> createLocalClient()
-            else -> createDefaultClient()
+            ClientType.LOCAL -> localClient
+            else -> defaultClient
         }
     }
 
-    fun createDefaultClient(): T
+    protected abstract fun createDefaultClient(): T
 
-    fun createLocalClient(): T
+    protected abstract fun createLocalClient(): T
 }
