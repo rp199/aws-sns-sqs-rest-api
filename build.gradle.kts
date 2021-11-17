@@ -3,8 +3,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("org.springframework.boot") version "2.3.0.RELEASE"
     id("io.spring.dependency-management") version "1.0.9.RELEASE"
-    kotlin("jvm") version "1.3.72"
-    kotlin("plugin.spring") version "1.3.72"
+    kotlin("jvm") version "1.4.10"
+    kotlin("plugin.spring") version "1.4.10"
     id("com.github.johnrengelman.processes") version "0.5.0"
     id("org.springdoc.openapi-gradle-plugin") version "1.3.0"
 }
@@ -74,5 +74,5 @@ openApi {
     apiDocsUrl.set("http://localhost:8080/v3/api-docs.yaml")
     outputDir.set(file(rootDir))
     outputFileName.set("openapi.yaml")
-    waitTimeInSeconds.set(10)
+    waitTimeInSeconds.set(30)
 }

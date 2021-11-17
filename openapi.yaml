@@ -16,6 +16,33 @@ tags:
 - name: sns
   description: SNS Rest API
 paths:
+  /sns/list:
+    get:
+      tags:
+      - sns
+      summary: Lists all the available topics names
+      operationId: listTopics
+      parameters:
+      - name: clientType
+        in: header
+        description: "Specifies which client to use in the request: 'LOCAL' to use\
+          \ a local client or 'AWS' to use the real aws client with the environment\
+          \ credentials"
+        required: false
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - AWS
+      responses:
+        "200":
+          description: Topic names returned
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  type: string
   /sns/{queueName}/raw:
     post:
       tags:
@@ -29,6 +56,17 @@ paths:
         required: true
         schema:
           type: string
+      - name: clientType
+        in: header
+        description: "Specifies which client to use in the request: 'LOCAL' to use\
+          \ a local client or 'AWS' to use the real aws client with the environment\
+          \ credentials"
+        required: false
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - AWS
       requestBody:
         content:
           application/json:
@@ -51,48 +89,22 @@ paths:
         required: true
         schema:
           type: string
+      - name: clientType
+        in: header
+        description: "Specifies which client to use in the request: 'LOCAL' to use\
+          \ a local client or 'AWS' to use the real aws client with the environment\
+          \ credentials"
+        required: false
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - AWS
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/PublishMessageRequest"
-        required: true
-      responses:
-        "200":
-          description: Message successfully published
-  /sns/list:
-    get:
-      tags:
-      - sns
-      summary: Lists all the available topics names
-      operationId: listTopics
-      responses:
-        "200":
-          description: Topic names returned
-          content:
-            '*/*':
-              schema:
-                type: array
-                items:
-                  type: string
-  /sqs/{queueName}/raw:
-    post:
-      tags:
-      - sqs
-      summary: Publishes a raw message to the given queue
-      operationId: publishRawMessage_1
-      parameters:
-      - name: queueName
-        in: path
-        description: name of the queue where the message will be published
-        required: true
-        schema:
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: string
         required: true
       responses:
         "200":
@@ -110,6 +122,17 @@ paths:
         required: true
         schema:
           type: string
+      - name: clientType
+        in: header
+        description: "Specifies which client to use in the request: 'LOCAL' to use\
+          \ a local client or 'AWS' to use the real aws client with the environment\
+          \ credentials"
+        required: false
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - AWS
       responses:
         "404":
           description: No message found in the queue
@@ -135,6 +158,17 @@ paths:
         required: true
         schema:
           type: string
+      - name: clientType
+        in: header
+        description: "Specifies which client to use in the request: 'LOCAL' to use\
+          \ a local client or 'AWS' to use the real aws client with the environment\
+          \ credentials"
+        required: false
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - AWS
       requestBody:
         content:
           application/json:
@@ -156,15 +190,71 @@ paths:
         required: true
         schema:
           type: string
+      - name: clientType
+        in: header
+        description: "Specifies which client to use in the request: 'LOCAL' to use\
+          \ a local client or 'AWS' to use the real aws client with the environment\
+          \ credentials"
+        required: false
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - AWS
       responses:
         "200":
           description: Queue was purged
+  /sqs/{queueName}/raw:
+    post:
+      tags:
+      - sqs
+      summary: Publishes a raw message to the given queue
+      operationId: publishRawMessage_1
+      parameters:
+      - name: queueName
+        in: path
+        description: name of the queue where the message will be published
+        required: true
+        schema:
+          type: string
+      - name: clientType
+        in: header
+        description: "Specifies which client to use in the request: 'LOCAL' to use\
+          \ a local client or 'AWS' to use the real aws client with the environment\
+          \ credentials"
+        required: false
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - AWS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+        required: true
+      responses:
+        "200":
+          description: Message successfully published
   /sqs/list:
     get:
       tags:
       - sqs
       summary: Lists all the available queues names
       operationId: listQueues
+      parameters:
+      - name: clientType
+        in: header
+        description: "Specifies which client to use in the request: 'LOCAL' to use\
+          \ a local client or 'AWS' to use the real aws client with the environment\
+          \ credentials"
+        required: false
+        schema:
+          type: string
+          enum:
+          - LOCAL
+          - AWS
       responses:
         "200":
           description: Queue names returned
